@@ -1,0 +1,146 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>index</title>
+<meta name="viewport"
+	content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0">
+<link rel="shortcut icon" href="images/favicon.png">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet"
+	href="vendor/jquery.mobile/jquery.mobile-1.4.3.css">
+<script src="vendor/jquery/jquery-2.0.3.js"></script>
+<script src="vendor/jquery.mobile/jquery.mobile-1.4.3.js"></script>
+</head>
+<body style="display: none;">
+	<!--application UI goes here-->
+
+	<div data-role="page">
+		<div data-role="header">...</div>
+		<div role="main" class="ui-content">
+			<a href="#" id="btnOpen" class="ui-btn"> Click here to login </a>
+			<a href="#" id="foo" class="ui-btn">Get User Info</a>
+		</div>
+		<div data-role="footer">...</div>
+	</div>
+
+
+
+	<a href="#" style="display: none" id="logoutText" target='myIFrame'
+		onclick="myIFrame.location='https://www.google.com/accounts/Logout'; startLogoutPolling();return false;">
+		Click here to logout </a>
+	<iframe name='myIFrame' id="myIFrame" style='display: none'></iframe>
+	<div id='uName'></div>
+	<img src='' id='imgHolder' />
+
+	<script src="js/initOptions.js"></script>
+	<script src="js/main.js"></script>
+	<script src="js/messages.js"></script>
+</body>
+<script>
+	var OAUTHURL = 'https://accounts.google.com/o/oauth2/auth?';
+	var VALIDURL = 'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=';
+	var SCOPE = 'https://www.google.com/m8/feeds';
+	var CLIENTID = '350276189015-6os5esfj3o7msccsnvqs7mis2861nsoj.apps.googleusercontent.com';
+	var REDIRECT = 'urn:ietf:wg:oauth:2.0:oob'
+	var LOGOUT = 'http://accounts.google.com/Logout';
+	var TYPE = 'code';
+	var _url = OAUTHURL + 'scope=' + SCOPE + '&client_id=' + CLIENTID
+			+ '&redirect_uri=' + REDIRECT + '&response_type=' + TYPE;
+	var acToken;
+	var tokenType;
+	var expiresIn;
+	var user;
+	var loggedIn = false;
+
+	$(function() {
+		$("#foo").on('click', function() {
+			//var hogeUrl = 'https://www.googleapis.com/oauth2/v2/userinfo' + '?access_token=' + accessToken;
+			var hogeUrl = 'https://www.google.com/m8/feeds/contacts/default/full' + '?access_token=' + accessToken;
+			console.log(hogeUrl);
+			$.ajax({
+				type: 'get',
+				url:hogeUrl,
+				dataType:'json'
+			})
+			.then(function(data) {
+				console.log('suc');
+				console.log(JSON.stringify(data));
+			}, function(data) {
+				console.log('fail');
+				console.log(JSON.stringify(data));
+			})
+		});
+	})
+	
+	function login() {
+
+		document.location = _url;
+
+		$.ajax({
+			url : _url,
+			dataType : "html"
+		})
+
+		.then(function(data) {
+			console.log('suc');
+			console.log(JSON.stringify(data));
+			alert(JSON.stringify(data));
+			$('#ins').html('<html><body>HelloWorld</body></html>');
+		}, function() {
+			console.log('fail');
+		})
+	}
+
+	function validateToken(token) {
+		$.ajax({
+			url : VALIDURL + token,
+			data : null,
+			success : function(responseText) {
+				getUserInfo();
+				loggedIn = true;
+				$('#loginText').hide();
+				$('#logoutText').show();
+			},
+			dataType : "jsonp"
+		});
+	}
+
+	function getUserInfo() {
+		$
+				.ajax({
+					url : 'https://www.google.com/m8/feeds/contacts/default/full?access_token='
+							+ acToken,
+					data : null,
+					success : function(resp) {
+						user = resp;
+						console.log(user);
+						$('#uName').text('Welcome ' + user.name);
+						$('#imgHolder').attr('src', user.picture);
+					},
+					dataType : "jsonp"
+				});
+	}
+
+	//credits: http://www.netlobo.com/url_query_string_javascript.html
+	function gup(url, name) {
+		name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+		var regexS = "[\\#&]" + name + "=([^&#]*)";
+		var regex = new RegExp(regexS);
+		var results = regex.exec(url);
+		if (results == null)
+			return "";
+		else
+			return results[1];
+	}
+
+	function startLogoutPolling() {
+		$('#loginText').show();
+		$('#logoutText').hide();
+		loggedIn = false;
+		$('#uName').text('Welcome ');
+		$('#imgHolder').attr('src', 'none.jpg');
+	}
+</script>
+</html>
